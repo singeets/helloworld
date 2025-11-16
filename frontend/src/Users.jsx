@@ -11,7 +11,7 @@ export default function Users({token, api}){
       <h3>Users</h3>
       <ul>
         {users.map(u=> (
-          <li key={u.id}>{u.username} — {u.count} <button onClick={async ()=>{await fetch(`${api}/users/${u.id}/increment`,{method:'POST',headers:{Authorization:token}}); fetchUsers()}}>+1</button></li>
+          <li key={u.id}>{u.username} — {u.count} {u.full_name ? ` — ${u.full_name}` : ''} <button onClick={async ()=>{await fetch(`${api}/users/${u.id}/increment`,{method:'POST',headers:{Authorization:token}}); fetchUsers()}}>+1</button></li>
         ))}
       </ul>
     </div>

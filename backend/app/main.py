@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from .database import SessionLocal, engine
-from . import models, crud
+from . import models, crud, schemas
 import os
 
 models.Base.metadata.create_all(bind=engine)
@@ -61,12 +61,12 @@ def me(authorization: str = Header(None), db: Session = Depends(get_db)):
     user = crud.get_user_by_token(db, token)
     if not user:
         raise HTTPException(401, 'invalid token')
-    return {"id": user.id, "username": user.username, "count": user.count}
+    return {"id": user.id, "username": user.username, "count": user.count, "full_name": user.full_name, "date_of_birth": user.date_of_birth, "place_of_birth": user.place_of_birth, "latitude": user.latitude, "longitude": user.longitude}
 
 @app.get('/users')
 def users(db: Session = Depends(get_db)):
     rows = crud.list_users(db)
-    return [{"id": r.id, "username": r.username, "count": r.count} for r in rows]
+    return [{"id": r.id, "username": r.username, "count": r.count, "full_name": r.full_name, "date_of_birth": r.date_of_birth, "place_of_birth": r.place_of_birth, "latitude": r.latitude, "longitude": r.longitude} for r in rows]
 
 @app.post('/users/{user_id}/increment')
 def increment(user_id: int, db: Session = Depends(get_db), authorization: str = Header(None)):
@@ -80,3 +80,14 @@ def increment(user_id: int, db: Session = Depends(get_db), authorization: str = 
     if not user:
         raise HTTPException(404, 'user not found')
     return {"id": user.id, "count": user.count}
+
+@app.post('/profile/update')
+def profile_update(data: schemas.ProfileUpdate, db: Session = Depends(get_db), authorization: str = Header(None)):
+    token = authorization
+    auth_user = crud.get_user_by_token(db, token)
+    if not auth_user:
+        raise HTTPException(401, 'invalid token')
+    user = crud.update_profile(db, data)
+    if not user:
+        raise HTTPException(404, 'user not found')
+    return {"id": user.id, "full_name": user.full_name, "date_of_birth": user.date_of_birth, "place_of_birth": user.place_of_birth, "latitude": user.latitude, "longitude": user.longitude}
